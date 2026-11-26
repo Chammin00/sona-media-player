@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#07080B"/>
+  <rect x="16" y="16" width="480" height="480" rx="96" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
+  <defs>
+    <radialGradient id="lensGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E8A838" stop-opacity="0.45"/>
+      <stop offset="55%" stop-color="#E05A47" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#07080B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ringGrad" x1="96" y1="96" x2="416" y2="416" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E8A838"/>
+      <stop offset="50%" stop-color="#E05A47"/>
+      <stop offset="100%" stop-color="#5B7CFA"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="196" fill="url(#lensGlow)"/>
+  <circle cx="256" cy="256" r="158" stroke="url(#ringGrad)" stroke-width="14"/>
+  <circle cx="256" cy="256" r="110" stroke="rgba(243,244,246,0.22)" stroke-width="4"/>
+  <circle cx="256" cy="256" r="64" stroke="#E8A838" stroke-width="8" stroke-opacity="0.85"/>
+  <path d="M236 220L302 256L236 292V220Z" fill="#F3F4F6"/>
+</svg>

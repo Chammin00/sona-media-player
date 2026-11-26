@@ -1,0 +1,19 @@
+{
+  "name": "SONA Media Player",
+  "short_name": "SONA",
+  "description": "Visual-first studio audio and video media player for mobile and desktop.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07080B",
+  "theme_color": "#07080B",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

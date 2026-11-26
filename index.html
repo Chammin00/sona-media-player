@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#07080B" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="description"
+      content="SONA — Visual-first studio audio and video media player for mobile and desktop."
+    />
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+    <link rel="apple-touch-icon" href="./icons/icon.svg" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>SONA — Studio Media Player</title>
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <!-- Top Studio Command Rail -->
+      <header class="top-bar electron-drag">
+        <div class="top-bar-left electron-no-drag">
+          <button
+            id="btn-toggle-library"
+            class="icon-btn desktop-only"
+            type="button"
+            title="Toggle library panel"
+            aria-label="Toggle library panel"
+          ></button>
+          <div class="brand-mark">
+            <img src="./icons/icon.svg" alt="" class="brand-logo" width="24" height="24" />
+            <span class="brand-name">SONA</span>
+          </div>
+          <span id="stage-status-pill" class="status-pill">Audio Engine</span>
+        </div>
+
+        <div class="top-bar-center">
+          <div id="top-track-crumb" class="top-crumb">Nocturne in Glass</div>
+          <span id="sleep-timer-badge" class="sleep-badge hidden"></span>
+        </div>
+
+        <div class="top-bar-right electron-no-drag">
+          <button id="btn-install-pwa" class="pill-btn hidden" type="button">
+            <span class="btn-icon" data-icon="download"></span>
+            <span>Install</span>
+          </button>
+          <button id="btn-open-add" class="pill-btn accent" type="button">
+            <span class="btn-icon" data-icon="plus"></span>
+            <span class="hide-xs">Add media</span>
+          </button>
+          <button
+            id="btn-fullscreen"
+            class="icon-btn"
+            type="button"
+            title="Cinema fullscreen (F)"
+            aria-label="Cinema fullscreen"
+          ></button>
+          <button
+            id="btn-toggle-inspector"
+            class="icon-btn desktop-only"
+            type="button"
+            title="Toggle studio inspector"
+            aria-label="Toggle studio inspector"
+          ></button>
+        </div>
+      </header>
+
+      <!-- Main 3-Pane Studio Workspace -->
+      <main class="workspace">
+        <!-- Left Library Rail -->
+        <aside id="library-rail" class="side-rail left-rail">
+          <div class="rail-header">
+            <div class="search-field">
+              <span class="search-icon" data-icon="search"></span>
+              <input
+                id="library-search"
+                type="search"
+                placeholder="Search tracks, artists..."
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <div class="rail-scroll sona-scroll">
+            <div id="library-filters" class="filter-group"></div>
+
+            <div class="section-head">
+              <span>Playlists</span>
+              <button
+                id="btn-new-playlist"
+                class="mini-icon-btn"
+                type="button"
+                title="Create playlist"
+                aria-label="Create playlist"
+              ></button>
+            </div>
+            <div id="new-playlist-form" class="inline-form hidden">
+              <input
+                id="new-playlist-input"
+                type="text"
+                maxlength="40"
+                placeholder="Playlist name..."
+              />
+              <button id="btn-save-playlist" class="pill-btn accent" type="button">Create</button>
+            </div>
+            <div id="playlist-list" class="playlist-list"></div>
+
+            <div class="section-head">
+              <span id="library-count-label">Tracks</span>
+              <button id="btn-rail-import" class="text-action-btn" type="button">Import</button>
+            </div>
+            <div id="track-list" class="track-list"></div>
+          </div>
+        </aside>
+
+        <!-- Center Visual Stage -->
+        <section id="visual-stage" class="visual-stage" tabindex="-1">
+          <!-- Video Ambilight Backdrop -->
+          <canvas id="ambilight-canvas" class="ambilight-canvas hidden" aria-hidden="true"></canvas>
+
+          <!-- WebGL2 Aurora Fluid Stage -->
+          <canvas id="gl-stage" class="stage-canvas" aria-hidden="true"></canvas>
+
+          <!-- High-DPI 2D Visualizer / Video Overlay Stage -->
+          <canvas id="canvas-stage" class="stage-canvas hidden" aria-hidden="true"></canvas>
+
+          <!-- Single Persistent Media Element (Audio + Video) -->
+          <div id="video-frame" class="video-frame hidden">
+            <video id="sona-media" playsinline preload="metadata"></video>
+          </div>
+
+          <!-- Top Stage Mode Floating Strip -->
+          <div id="stage-hud-top" class="stage-hud-top">
+            <div id="stage-mode-switcher" class="segmented-bar" role="tablist" aria-label="Visualizer engine">
+              <div id="stage-mode-glider" class="segmented-glider" aria-hidden="true"></div>
+              <button class="seg-btn active" data-viz-mode="aurora" type="button">Aurora</button>
+              <button class="seg-btn" data-viz-mode="halo" type="button">Halo</button>
+              <button class="seg-btn" data-viz-mode="prism" type="button">Prism</button>
+              <button class="seg-btn" data-viz-mode="oscilloscope" type="button">Scope</button>
+              <button class="seg-btn" data-viz-mode="nebula" type="button">Nebula</button>
+            </div>
+
+            <div class="stage-quick-actions">
+              <button
+                id="btn-stage-hud-toggle"
+                class="stage-chip-btn"
+                type="button"
+                title="Toggle stage track HUD"
+              ></button>
+              <button
+                id="btn-stage-fx-mobile"
+                class="stage-chip-btn mobile-only"
+                type="button"
+                title="Open visual studio"
+              ></button>
+            </div>
+          </div>
+
+          <!-- Floating Center / Audio Artwork Showcase -->
+          <div id="audio-showcase" class="audio-showcase">
+            <button
+              id="btn-showcase-art"
+              class="artwork-prism"
+              type="button"
+              aria-label="Play or pause track"
+            >
+              <img id="showcase-art-img" alt="" class="artwork-img" />
+              <div class="artwork-play-veil">
+                <span id="showcase-play-icon"></span>
+              </div>
+            </button>
+            <div class="showcase-meta">
+              <div id="showcase-title" class="showcase-title">Nocturne in Glass</div>
+              <div id="showcase-artist" class="showcase-artist">SONA Studio — Acoustic Optics</div>
+              <div id="showcase-badge-row" class="showcase-badges">
+                <span id="showcase-mode-badge" class="micro-badge">Aurora Fluid</span>
+                <span id="showcase-cors-badge" class="micro-badge hidden">Ambient Visualizer</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Subtitles Overlay -->
+          <div id="subtitle-overlay" class="subtitle-overlay hidden" aria-live="polite"></div>
+
+          <!-- Error / Buffering Pill -->
+          <div id="stage-alert" class="stage-alert hidden" role="status"></div>
+
+          <!-- Mobile Full-Stage Transport Dock (< 1024px) -->
+          <div id="mobile-stage-controls" class="mobile-stage-controls mobile-only">
+            <div class="mobile-track-row">
+              <div class="mobile-track-info">
+                <div id="mobile-track-title" class="mobile-title">Nocturne in Glass</div>
+                <div id="mobile-track-artist" class="mobile-artist">SONA Studio</div>
+              </div>
+              <button id="btn-mobile-fav" class="icon-btn" type="button" aria-label="Favorite"></button>
+            </div>
+
+            <div class="scrubber-row">
+              <span id="mobile-time-current" class="time-readout font-mono-tabular">0:00</span>
+              <div class="scrubber-wrap">
+                <canvas id="mobile-waveform" class="waveform-canvas"></canvas>
+              </div>
+              <span id="mobile-time-total" class="time-readout font-mono-tabular">0:00</span>
+            </div>
+
+            <div class="mobile-transport-row">
+              <button id="btn-mobile-shuffle" class="icon-btn" type="button" aria-label="Shuffle"></button>
+              <button id="btn-mobile-prev" class="icon-btn lg" type="button" aria-label="Previous"></button>
+              <button id="btn-mobile-play" class="play-fab" type="button" aria-label="Play or pause"></button>
+              <button id="btn-mobile-next" class="icon-btn lg" type="button" aria-label="Next"></button>
+              <button id="btn-mobile-repeat" class="icon-btn" type="button" aria-label="Repeat"></button>
+            </div>
+
+            <div class="mobile-utility-row">
+              <button id="btn-mobile-ab" class="utility-chip" type="button">A-B Off</button>
+              <button id="btn-mobile-speed" class="utility-chip font-mono-tabular" type="button">1.0x</button>
+              <button id="btn-mobile-subs" class="utility-chip" type="button">Subs</button>
+              <button id="btn-mobile-pip" class="utility-chip hidden" type="button">PiP</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Studio Inspector (Visuals / Equalizer / Queue) -->
+        <aside id="inspector-rail" class="side-rail right-rail">
+          <div class="inspector-tabs-wrap">
+            <div id="inspector-tabs" class="segmented-bar full" role="tablist">
+              <div id="inspector-glider" class="segmented-glider" aria-hidden="true"></div>
+              <button class="seg-btn active" data-inspector-tab="visuals" type="button">Visuals</button>
+              <button class="seg-btn" data-inspector-tab="equalizer" type="button">Equalizer</button>
+              <button class="seg-btn" data-inspector-tab="queue" type="button">Up Next</button>
+            </div>
+          </div>
+
+          <div class="rail-scroll sona-scroll">
+            <div id="panel-visuals" class="inspector-panel"></div>
+            <div id="panel-equalizer" class="inspector-panel hidden"></div>
+            <div id="panel-queue" class="inspector-panel hidden"></div>
+          </div>
+        </aside>
+      </main>
+
+      <!-- Desktop Transport Deck (>= 1024px) -->
+      <footer id="transport-deck" class="transport-deck desktop-only">
+        <div class="deck-left">
+          <div class="deck-art-wrap">
+            <img id="deck-art-img" alt="" class="deck-art" />
+          </div>
+          <div class="deck-meta">
+            <div id="deck-title" class="deck-title">Nocturne in Glass</div>
+            <div id="deck-artist" class="deck-artist">SONA Studio</div>
+          </div>
+          <button id="btn-deck-fav" class="icon-btn" type="button" title="Toggle favorite" aria-label="Toggle favorite"></button>
+        </div>
+
+        <div class="deck-center">
+          <div class="deck-buttons">
+            <button id="btn-shuffle" class="icon-btn sm" type="button" title="Shuffle" aria-label="Shuffle"></button>
+            <button id="btn-prev" class="icon-btn" type="button" title="Previous (P)" aria-label="Previous"></button>
+            <button id="btn-play" class="play-fab sm" type="button" title="Play / Pause (Space)" aria-label="Play or pause"></button>
+            <button id="btn-next" class="icon-btn" type="button" title="Next (N)" aria-label="Next"></button>
+            <button id="btn-repeat" class="icon-btn sm" type="button" title="Repeat mode" aria-label="Repeat mode"></button>
+          </div>
+          <div class="scrubber-row">
+            <span id="time-current" class="time-readout font-mono-tabular">0:00</span>
+            <div class="scrubber-wrap" id="desktop-scrubber-wrap">
+              <canvas id="desktop-waveform" class="waveform-canvas"></canvas>
+              <div id="scrubber-tooltip" class="scrubber-tooltip font-mono-tabular hidden">0:00</div>
+            </div>
+            <span id="time-total" class="time-readout font-mono-tabular">0:00</span>
+          </div>
+        </div>
+
+        <div class="deck-right">
+          <button id="btn-ab-loop" class="utility-chip" type="button" title="A-B Loop ([ / ])">A-B</button>
+          <button id="btn-speed" class="utility-chip font-mono-tabular" type="button" title="Playback speed">1.0x</button>
+          <button id="btn-subtitles" class="icon-btn sm" type="button" title="Load subtitles (.vtt/.srt)" aria-label="Subtitles"></button>
+          <button id="btn-pip" class="icon-btn sm hidden" type="button" title="Picture in Picture" aria-label="Picture in Picture"></button>
+          <div class="volume-cluster">
+            <button id="btn-mute" class="icon-btn sm" type="button" title="Mute (M)" aria-label="Mute"></button>
+            <input
+              id="volume-slider"
+              class="sona-slider volume-slider"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value="0.85"
+              aria-label="Volume"
+            />
+          </div>
+          <button id="btn-quick-eq" class="icon-btn sm" type="button" title="Equalizer (E)" aria-label="Open Equalizer"></button>
+          <button id="btn-quick-queue" class="icon-btn sm" type="button" title="Up Next Queue (Q)" aria-label="Open Queue"></button>
+        </div>
+      </footer>
+
+      <!-- Mobile Floating Mini-Player (shown on non-Stage tabs) -->
+      <div id="mobile-mini-player" class="mobile-mini-player hidden">
+        <div class="mini-progress-track">
+          <div id="mini-progress-fill" class="mini-progress-fill"></div>
+        </div>
+        <div class="mini-body" id="mini-player-tap">
+          <img id="mini-art-img" alt="" class="mini-art" />
+          <div class="mini-meta">
+            <div id="mini-title" class="mini-title">Nocturne in Glass</div>
+            <div id="mini-artist" class="mini-artist">SONA Studio</div>
+          </div>
+        </div>
+        <div class="mini-actions">
+          <button id="btn-mini-play" class="icon-btn" type="button" aria-label="Play or pause"></button>
+          <button id="btn-mini-next" class="icon-btn" type="button" aria-label="Next track"></button>
+        </div>
+      </div>
+
+      <!-- Mobile Bottom Navigation (< 1024px) -->
+      <nav id="mobile-bottom-nav" class="mobile-bottom-nav mobile-only" aria-label="Mobile navigation">
+        <button class="mobile-nav-btn active" data-mobile-tab="stage" type="button">
+          <span class="nav-icon" data-icon="sparkles"></span>
+          <span>Stage</span>
+        </button>
+        <button class="mobile-nav-btn" data-mobile-tab="library" type="button">
+          <span class="nav-icon" data-icon="music"></span>
+          <span>Library</span>
+        </button>
+        <button class="mobile-nav-btn" data-mobile-tab="queue" type="button">
+          <span class="nav-icon" data-icon="listMusic"></span>
+          <span>Queue</span>
+        </button>
+        <button class="mobile-nav-btn" data-mobile-tab="fx" type="button">
+          <span class="nav-icon" data-icon="sliders"></span>
+          <span>Studio FX</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Add Media & Subtitles Modal -->
+    <div id="add-media-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="modal-title" class="modal-title">Add Media</h2>
+          <button id="btn-close-modal" class="icon-btn sm" type="button" aria-label="Close modal"></button>
+        </div>
+
+        <div id="modal-tabs" class="segmented-bar full modal-tabs" role="tablist">
+          <div id="modal-glider" class="segmented-glider" aria-hidden="true"></div>
+          <button class="seg-btn active" data-modal-tab="files" type="button">Local Files</button>
+          <button class="seg-btn" data-modal-tab="url" type="button">Stream URL</button>
+          <button class="seg-btn" data-modal-tab="subtitles" type="button">Subtitles</button>
+        </div>
+
+        <div id="modal-tab-files" class="modal-body">
+          <label class="drop-box" for="input-local-files">
+            <span class="drop-box-icon" data-icon="upload"></span>
+            <span class="drop-box-title">Drop audio or video files, or click to browse</span>
+            <span class="drop-box-sub">MP3, FLAC, WAV, OGG, M4A, MP4, WebM, MOV — saved locally offline</span>
+          </label>
+          <input
+            id="input-local-files"
+            type="file"
+            multiple
+            accept="audio/*,video/*,.mp3,.wav,.flac,.ogg,.m4a,.aac,.mp4,.webm,.mov,.mkv"
+            class="sr-only"
+          />
+          <div class="modal-row-actions">
+            <label class="pill-btn full-width" for="input-local-folder">
+              <span class="btn-icon" data-icon="folder"></span>
+              <span>Import entire folder</span>
+            </label>
+            <input
+              id="input-local-folder"
+              type="file"
+              webkitdirectory
+              directory
+              multiple
+              class="sr-only"
+            />
+          </div>
+          <div id="import-progress" class="import-progress hidden"></div>
+        </div>
+
+        <form id="modal-tab-url" class="modal-body hidden">
+          <div class="field-group">
+            <label for="input-stream-url">Direct Audio or Video URL</label>
+            <input
+              id="input-stream-url"
+              type="url"
+              required
+              placeholder="https://example.com/stream.mp4"
+            />
+          </div>
+          <div class="field-group">
+            <label for="input-stream-title">Track Title (optional)</label>
+            <input id="input-stream-title" type="text" placeholder="Live Studio Stream" />
+          </div>
+          <div class="field-group">
+            <label for="input-stream-kind">Media Format</label>
+            <select id="input-stream-kind">
+              <option value="auto">Auto-detect from URL</option>
+              <option value="audio">Audio Stream</option>
+              <option value="video">Video Stream</option>
+            </select>
+          </div>
+          <button class="pill-btn accent full-width" type="submit">Add stream &amp; play</button>
+        </form>
+
+        <div id="modal-tab-subtitles" class="modal-body hidden">
+          <label class="drop-box" for="input-subtitle-file">
+            <span class="drop-box-icon" data-icon="captions"></span>
+            <span class="drop-box-title">Select .srt or .vtt subtitle file</span>
+            <span class="drop-box-sub">Attaches synced captions onto the current media stage</span>
+          </label>
+          <input id="input-subtitle-file" type="file" accept=".vtt,.srt,text/vtt" class="sr-only" />
+          <div id="subtitle-status" class="subtitle-status">No subtitle file loaded</div>
+          <button id="btn-clear-subtitles" class="pill-btn full-width hidden" type="button">
+            Clear active subtitles
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Window Drag & Drop Veil -->
+    <div id="drop-overlay" class="drop-overlay hidden" aria-hidden="true">
+      <div class="drop-overlay-card">
+        <span class="drop-overlay-icon" data-icon="upload"></span>
+        <div class="drop-overlay-title">Drop media or subtitles into SONA</div>
+        <div class="drop-overlay-sub">Audio, video, and .srt / .vtt files supported</div>
+      </div>
+    </div>
+
+    <!-- Tactile Status Toast -->
+    <div id="sona-toast" class="sona-toast hidden" role="status" aria-live="polite"></div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>

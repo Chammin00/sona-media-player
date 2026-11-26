@@ -1,0 +1,15 @@
+# Dependencies & Build Artifacts
+node_modules/
+dist/
+out/
+
+# Logs & Temporary
+*.log
+*.tmp
+
+# System & Editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
